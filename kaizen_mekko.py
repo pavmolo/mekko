@@ -12,8 +12,8 @@ def calculate_font_size(width_percent, height_percent, text_length):
     block_height_px = height_percent * graph_height_px / 100
     char_width = 8
     char_height = 12
-    font_size_by_width = block_width_px / (text_length * char_width) * 4 * 0.3
-    font_size_by_height = block_height_px / char_height * 4 * 0.5
+    font_size_by_width = block_width_px / (text_length * char_width) * 3 * 0.3
+    font_size_by_height = block_height_px / char_height * 3 * 0.5
     return max(8, min(font_size_by_width, font_size_by_height))
 
 # Функция для анализа позиции на рынке
