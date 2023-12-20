@@ -2,15 +2,9 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import seaborn as sns
+import html
 
-
-st.markdown(
-    '<div style="text-align:center;"><img src="https://i.ibb.co/bXgXp1C/photo-5472038646254260855-c.jpg" style="width:15%; margin-bottom:30px;"></div>', 
-    unsafe_allow_html=True
-)
+# Функция для расчета размера шрифта в блоках диаграммы
 def calculate_font_size(width_percent, height_percent, text_length):
     graph_width_px = 800
     graph_height_px = 600
@@ -18,29 +12,16 @@ def calculate_font_size(width_percent, height_percent, text_length):
     block_height_px = height_percent * graph_height_px / 100
     char_width = 8
     char_height = 12
-    font_size_by_width = block_width_px / (text_length * char_width) * 12 * 0.5  # уменьшено на 20%
-    font_size_by_height = block_height_px / char_height * 12 * 0.8  # уменьшено на 20%
+    font_size_by_width = block_width_px / (text_length * char_width) * 12 * 0.5
+    font_size_by_height = block_height_px / char_height * 12 * 0.8
     return max(8, min(font_size_by_width, font_size_by_height))
 
+# Функция для анализа позиции на рынке
 def analyze_market_position(data_df):
     market_names = data_df.columns[1:].tolist()
-    market_sizes = data_df.iloc[0, 1:].values
-    company_names = data_df.iloc[1:, 0].tolist()  # Изменено здесь
+    company_names = data_df.iloc[1:, 0].tolist()
     our_company_name = data_df.iloc[1, 0]
-    # Определение характеристики рынка
-    market_characteristics_descriptions = {
-        "Высококонкурентный": "Рынок, на котором множество компаний имеют схожую долю рынка.",
-        "Олигополистический": "Рынок, на котором одна или несколько компаний контролируют большую часть рынка.",
-        "Раздробленный": "Рынок, на котором множество мелких игроков, но нет явного лидера."
-    }
-
-    # Рекомендации на основе позиции на рынке
-    recommendations_descriptions = {
-        "Отсутствует": "Рассмотрите возможность входа на рынок, так как ваша компания отсутствует на нем.",
-        "Маленький игрок": "Рассмотрите стратегии для увеличения доли, так как ваша компания имеет небольшую долю на рынке.",
-        "Конкурент": "Рассмотрите стратегии для увеличения доли или удержания текущей позиции, так как ваша компания является одним из ключевых игроков, но не лидером.",
-        "Лидер": "Сосредоточьтесь на удержании лидирующей позиции и изучите возможные угрозы от конкурентов."
-    }
+    
     market_positions = {}
     market_characteristics = {}
     recommendations = {}
@@ -49,15 +30,13 @@ def analyze_market_position(data_df):
 
     for idx, market in enumerate(market_names):
         our_share = data_df.loc[data_df.iloc[:, 0] == our_company_name, market].values[0]
-        all_shares = data_df.iloc[1:, idx+1].values  # Изменено здесь
+        all_shares = data_df.iloc[1:, idx+1].values
         max_share = max(all_shares)
-        leader_idx = np.argmax(all_shares)  # Изменено здесь
+        leader_idx = np.argmax(all_shares)
         leader_company = company_names[leader_idx]
 
-        # Запись доли рынка нашей компании
         our_market_shares[market] = f"{our_share*100:.2f}%"
 
-        # Определение позиции на рынке
         if our_share == 0:
             market_positions[market] = "Отсутствует"
             recommendations[market] = "Рассмотрите возможность входа на рынок"
@@ -71,7 +50,6 @@ def analyze_market_position(data_df):
             market_positions[market] = "Лидер"
             recommendations[market] = "Сосредоточьтесь на удержании лидирующей позиции"
 
-        # Определение характеристики рынка
         if len([share for share in all_shares if share > 0.1]) > 3:
             market_characteristics[market] = "Высококонкурентный"
         elif max_share > 0.5:
@@ -79,19 +57,12 @@ def analyze_market_position(data_df):
         else:
             market_characteristics[market] = "Раздробленный"
 
-        # Определение лидера на рынке
         leaders[market] = leader_company
-    
+
     return our_company_name, our_market_shares, market_positions, market_characteristics, recommendations, leaders
 
-
-
+# Streamlit приложение
 st.title("Mekko Chart App")
-with st.expander("Инструкция по созданию эксель файла"):
-    st.markdown(
-        '<div style="text-align:center;"><img src="https://i.ibb.co/t8z0qgN/2023-09-28-13-11-25.png"></div>', 
-        unsafe_allow_html=True
-    )
 
 uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
 
@@ -137,11 +108,11 @@ if uploaded_file:
                 )
             cumulative_y[i] += y_val
 
-    cumulative_percentages = np.cumsum(widths) / widths.sum() * widths.sum()  # Изменено здесь
+    cumulative_percentages = np.cumsum(widths) / widths.sum() * widths.sum()
     percent_labels = [f"{label} ({int(width)}%)" for label, width in zip(labels, widths / widths.sum() * 100)]
         
     fig.update_xaxes(
-        tickvals=cumulative_percentages - (np.array(widths) / widths.sum() * widths.sum() / 2),  # Изменено здесь
+        tickvals=cumulative_percentages - (np.array(widths) / widths.sum() * widths.sum() / 2),
         ticktext=percent_labels
     )
     fig.update_xaxes(tickformat=".0%", range=[0, widths.sum()])
@@ -160,10 +131,9 @@ if uploaded_file:
         trace.marker.line.color = "white"
     st.plotly_chart(fig)
 
-    data_df = pd.read_excel(uploaded_file, engine='openpyxl')
     our_company_name, our_market_shares, market_positions, market_characteristics, recommendations, leaders = analyze_market_position(data_df)
-    # Вывод названия вашей компании
-    #st.write(f"Анализ для компании: **{our_company_name}**")
+    
+    st.write(f"Анализ для компании: **{our_company_name}**")
     
     for market in market_positions:
         st.header(f"Рынок {market}:")
@@ -171,10 +141,10 @@ if uploaded_file:
         st.markdown(f"**Ваше положение:** {market_positions.get(market, 'Не определено')}")
         st.markdown(f"**Лидер на рынке:** {leaders.get(market, 'Не определено')}")
         
-        market_characteristic_description = market_characteristics_descriptions.get(market_characteristics.get(market, 'Не определено'), '')
-        recommendation_description = recommendations_descriptions.get(recommendations.get(market, 'Не определено'), '')
+        market_characteristic_description = html.escape(market_characteristics_descriptions.get(market_characteristics.get(market, 'Не определено'), ''))
+        recommendation_description = html.escape(recommendations_descriptions.get(recommendations.get(market, 'Не определено'), ''))
         
         st.markdown(f"**Характеристика рынка:** {market_characteristics.get(market, 'Не определено')}{' - ' + market_characteristic_description if market_characteristic_description else ''}")
         st.markdown(f"**Рекомендация:** {recommendations.get(market, 'Не определено')} - {recommendation_description}")
-
+        
         st.divider()
