@@ -27,7 +27,20 @@ def analyze_market_position(data_df):
     market_sizes = data_df.iloc[0, 1:].values
     company_names = data_df.iloc[1:, 0].tolist()  # Изменено здесь
     our_company_name = data_df.iloc[1, 0]
-    
+    # Определение характеристики рынка
+    market_characteristics_descriptions = {
+        "Высококонкурентный": "Рынок, на котором множество компаний имеют схожую долю рынка.",
+        "Олигополистический": "Рынок, на котором одна или несколько компаний контролируют большую часть рынка.",
+        "Раздробленный": "Рынок, на котором множество мелких игроков, но нет явного лидера."
+    }
+
+    # Рекомендации на основе позиции на рынке
+    recommendations_descriptions = {
+        "Отсутствует": "Рассмотрите возможность входа на рынок, так как ваша компания отсутствует на нем.",
+        "Маленький игрок": "Рассмотрите стратегии для увеличения доли, так как ваша компания имеет небольшую долю на рынке.",
+        "Конкурент": "Рассмотрите стратегии для увеличения доли или удержания текущей позиции, так как ваша компания является одним из ключевых игроков, но не лидером.",
+        "Лидер": "Сосредоточьтесь на удержании лидирующей позиции и изучите возможные угрозы от конкурентов."
+    }
     market_positions = {}
     market_characteristics = {}
     recommendations = {}
@@ -68,7 +81,7 @@ def analyze_market_position(data_df):
 
         # Определение лидера на рынке
         leaders[market] = leader_company
-
+    
     return our_company_name, our_market_shares, market_positions, market_characteristics, recommendations, leaders
 
 
@@ -154,8 +167,14 @@ if uploaded_file:
     
     for market in market_positions:
         st.header(f"Рынок {market}:")
-        st.write(f"Ваше положение: {market_positions.get(market, 'Не определено')}")
-        st.write(f"Лидер на рынке: {leaders.get(market, 'Не определено')}")
-        st.write(f"Характеристика рынка: {market_characteristics.get(market, 'Не определено')}")
-        st.write(f"Рекомендация: {recommendations.get(market, 'Не определено')}")
+        
+        st.markdown(f"**Ваше положение:** {market_positions.get(market, 'Не определено')}")
+        st.markdown(f"**Лидер на рынке:** {leaders.get(market, 'Не определено')}")
+        
+        market_characteristic_description = market_characteristics_descriptions.get(market_characteristics.get(market, 'Не определено'), '')
+        recommendation_description = recommendations_descriptions.get(recommendations.get(market, 'Не определено'), '')
+        
+        st.markdown(f"**Характеристика рынка:** {market_characteristics.get(market, 'Не определено')}{' - ' + market_characteristic_description if market_characteristic_description else ''}")
+        st.markdown(f"**Рекомендация:** {recommendations.get(market, 'Не определено')} - {recommendation_description}")
+
         st.divider()
